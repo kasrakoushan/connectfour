@@ -9,9 +9,9 @@ module myfsm(
     input clk,
     input play, // REMEMBER TO COMPLEMENT (this is a KEY)
     input reset,
-    input decoder_valid, // decoder output: whether switch input was valid
+    input valid_input, // decoder output: whether switch input was valid
     input write_to_board, // result from move validator
-    input [2:0] logic_result, // result from game logic unit
+    input [1:0] logic_result, // result from game logic unit
     input [2:0] decoder_addr, // address from decoder
     input [5:0] validator_write_onoff, // write value from validator
     input [5:0] validator_write_player, // write value from validator
@@ -49,7 +49,7 @@ module myfsm(
         case (current_state)
             // wait until play is pressed, then change to CHECK_INPUT
             WAIT_INPUT: begin
-                if (decoder_valid)
+                if (valid_input)
                     next_state = play ? CHECK_INPUT: WAIT_INPUT;
             end
             
