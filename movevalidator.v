@@ -1,16 +1,18 @@
 `include "mylog.v"
 
+// modelsim testing complete
 module movevalidator(
     input [5:0] onoff_data,
     input [5:0] player_data,
-    input go,
+    // input go,
     input cur_player,
     
     output valid_move,
     output [5:0] write_onoff,
     output reg [5:0] write_player);
     
-    reg [2:0] height;
+    // reg [2:0] height;
+    wire [2:0] height;
     
     mylog heightnum(onoff_data, height);
     
@@ -19,7 +21,7 @@ module movevalidator(
     
     always @(*) begin
         if (cur_player) // cur_player is 1
-            write_player = player_data + 6'b1 << height;
+            write_player = player_data + (6'b1 << height);
         else
             write_player = player_data; // do nothing
     end

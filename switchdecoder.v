@@ -1,3 +1,4 @@
+// modelsim testing complete
 module switchdecoder(
     input [6:0] switch, // take a one-hot encoding and produce a col number
     output reg [2:0] address,

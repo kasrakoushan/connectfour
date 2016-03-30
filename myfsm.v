@@ -1,17 +1,15 @@
 /*
 Some notes:
-- move validator only needs access to one memory address
-- however, game logic unit needs access to several memory addresses
-- so we will need an input from the logic unit for what address it needs
+- will need to make sure memory reset works properly
 */
 
 module myfsm(
     input clk,
     input play, // REMEMBER TO COMPLEMENT (this is a KEY)
-    input reset,
+    input reset, // active-low
     input valid_input, // decoder output: whether switch input was valid
     input write_to_board, // result from move validator
-    input [1:0] logic_result, // result from game logic unit
+    input logic_result, // result from game logic unit
     input [2:0] decoder_addr, // address from decoder
     input [5:0] validator_write_onoff, // write value from validator
     input [5:0] validator_write_player, // write value from validator
@@ -19,17 +17,19 @@ module myfsm(
     output reg cur_player, // current player
     output reg game_finished, // whether game is finished (useful for VGA)
     output reg logic_go, // command to game logic unit
-    output reg validator_go, // command to move validator
-    output reg onoff_write, 
-    output reg player_write,
+    output reg logic_reset, // command to tell logic to reset (active high)
+    // output reg validator_go, // command to move validator
+    output reg onoff_write, // write instruction to memory
+    output reg player_write, // write instruction to memory
     output reg [2:0] mem_address, // memory address to write to
+    // these write values also go to logic unit:
     output reg [5:0] write_to_onoff, // value to write to on off board
     output reg [5:0] write_to_player); // value to write to player board
     
     reg [2:0] current_state, next_state;
+    reg next_turn; // this will block until the play button is released
     
-    initial cur_player = 1'b0; // initialize cur_player to 0
-    initial game_finished = 1'b0;
+    
     integer index; // initialize index for memory reset loop
     
     localparam  WAIT_INPUT          = 3'd0, // wait for input
@@ -39,18 +39,29 @@ module myfsm(
                 END_GAME_STATE      = 3'd4, // wait for restart
                 
                 // OUTPUTS OF WIN LOGIC UNIT
-                LOGIC_UNSURE        = 2'd0, // logic unit is not finished
-                LOGIC_OVER          = 2'd1, // game is over
-                LOGIC_NOTOVER       = 2'd2; // game is not over
-                // might not need these signals - just send everything to logic unit
+                LOGIC_OVER          = 1'b1, // game is over
+                LOGIC_NOTOVER       = 1'b0; // game is not over
+                // might not need these signals
+		// just send everything to logic unit
+                
+    initial begin
+        cur_player = 1'b0; // initialize cur_player to 0
+        game_finished = 1'b0; // game is not over
+        current_state = WAIT_INPUT; // set initial state
+        next_turn = 1'b1; // move forward initially
+    end
                 
     // state table
     always @(*) begin
         case (current_state)
             // wait until play is pressed, then change to CHECK_INPUT
             WAIT_INPUT: begin
-                if (valid_input)
-                    next_state = play ? CHECK_INPUT: WAIT_INPUT;
+		if (next_turn) begin
+		  if (valid_input)
+		      next_state = !play ? CHECK_INPUT: WAIT_INPUT;
+		  else
+		      next_state = WAIT_INPUT;
+		end
             end
             
             // if move was valid, change to UPDATE_GAME, otherwise stay
@@ -67,16 +78,16 @@ module myfsm(
                 case (logic_result)
                     LOGIC_OVER: next_state = END_GAME_STATE;
                     LOGIC_NOTOVER: begin 
-                        next_state = WAIT_INPUT;
-                        cur_player = !cur_player;
+			// current issue: cur_player is not updating when column becomes full
+			cur_player = !cur_player;
+			next_state = WAIT_INPUT;
                     end
-                    LOGIC_UNSURE: next_state = CHECK_WINNER;
                     // should not need a default
                 endcase
             end
                 
             // wait until play is pressed, then change to WAIT_INPUT
-            END_GAME_STATE: next_state = play ? WAIT_INPUT: END_GAME_STATE;
+            END_GAME_STATE: next_state = !play ? WAIT_INPUT: END_GAME_STATE;
             
             // by default, go to END_GAME_STATE state
             // should not reach this
@@ -87,18 +98,22 @@ module myfsm(
     // datapath signals
     always @(*) begin
         // by default make signals zero
-        logic_go = 1'b0;
-        validator_go = 1'b0;
-        onoff_write = 1'b0;
-        player_write = 1'b0;
-        mem_address = 3'd0;
+        // might have to change these to non-blocking assignments?
+        logic_go <= 1'b0;
+        logic_reset <= 1'b0;
+        // validator_go <= 1'b0;
+        // decoder_go <= 1'b0; removed enable for decoder
+        onoff_write <= 1'b0;
+        player_write <= 1'b0;
+        mem_address <= 3'd0;
         
         case (current_state)
             // set memory address to be address from decoder
             // enable move validator
             CHECK_INPUT: begin
-                validator_go = 1'b1;
-                mem_address = decoder_addr;
+                mem_address <= decoder_addr;
+                // validator_go <= 1'b1;
+		next_turn <= 1'b0; // don't return to WAIT_INPUT until play button released
                 /* validator will take current player, and 1 column from
                 each of the onoff and player boards */
             end
@@ -106,12 +121,12 @@ module myfsm(
             // change player, enable writing to game boards
             UPDATE_GAME: begin
                 // enable write for memory, set address
-                onoff_write = 1'b1;
-                player_write = 1'b1;
-                mem_address = decoder_addr;
-                // update memory
-                write_to_onoff = validator_write_onoff;
-                write_to_player = validator_write_player;
+                mem_address <= decoder_addr;
+                write_to_onoff <= validator_write_onoff;
+                write_to_player <= validator_write_player;
+                onoff_write <= 1'b1;
+                player_write <= 1'b1;
+                logic_go <= 1'b1; // also write to logic unit
                 // is this enough to update memory?
                 // can we update cur_player here without messing something up?
                 // TO-DO: check in Modelsim
@@ -119,31 +134,35 @@ module myfsm(
             
             // enable game logic unit
             CHECK_WINNER: begin
-                logic_go = 1'b1;
-                // TO-DO: change address to RAM as needed by logic unit
-                // OR maybe just send logic unit all of current game state
+                // logic unit should already have result; nothing to do?
             end
             
             // set cur_player to 0
             // wait for play button to reset game boards
             END_GAME_STATE: begin
-                cur_player = 1'b0;
-                game_finished = 1'b0;
+                cur_player <= 1'b0;
+                game_finished <= 1'b1;
+                logic_reset <= 1'b1;
                 if (play)
-                    onoff_write = 1'b1;
-                    player_write = 1'b1;
-                    write_to_onoff = 6'd0;
-                    write_to_player = 6'd0;
+                    onoff_write <= 1'b1;
+                    player_write <= 1'b1;
+                    write_to_onoff <= 6'd0;
+                    write_to_player <= 6'd0;
                     for (index = 0; index < 7; index = index + 1)
                         begin
-                            mem_address = index;
+                            mem_address <= index;
                             // should this be enough to fill board with 0s?
-                            // TO-DO: check in Modelsim
+                            // checked in Modelsim, still not sure if it will update the memory
                         end
             end
             
             // should not need a default
         endcase
+    end
+    
+    // only change from WAIT_INPUT to CHECK_INPUT once play button has been released
+    always @(posedge play) begin
+	next_turn <= 1'b1;
     end
         
     
