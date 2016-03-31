@@ -16,6 +16,9 @@ module movevalidator(
     
     mylog heightnum(onoff_data, height);
     
+    // the onoff_data and player_data are updated with a time delay
+    // this is because they come from RAM, which has a clock cycle
+    // could instead use registers which update "instantly"
     assign valid_move = onoff_data < 6'b111111; // must not be full
     assign write_onoff = (onoff_data << 1) + 1'b1; // shift left, add 1
     
