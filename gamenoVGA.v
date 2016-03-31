@@ -3,7 +3,7 @@
 `include "myfsm.v"
 `include "switchdecoder.v"
 `include "gameboard.v"
-`include "/data/quartus/quartus/eda/sim_lib/altera_mf.v"
+// `include "/data/quartus/quartus/eda/sim_lib/altera_mf.v"
 // check if the fact that mylog.v is included twice is an issue
 // not really, is just over-written
 
