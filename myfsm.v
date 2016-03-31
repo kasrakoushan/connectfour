@@ -1,4 +1,4 @@
-/*
+ /*
 Some notes:
 - will need to make sure memory reset works properly
 */
@@ -52,20 +52,21 @@ module myfsm(
     end
                 
     // state table
-    always @(*) begin
+    always @(posedge clk, negedge play) begin
         case (current_state)
             // wait until play is pressed, then change to CHECK_INPUT
             WAIT_INPUT: begin
 		if (next_turn) begin
-		  if (valid_input)
-		      next_state = !play ? CHECK_INPUT: WAIT_INPUT;
+		  // potential source of bugs: write_to_board might not be properly updated yet
+		  if (valid_input && write_to_board)
+		      next_state = !play ? UPDATE_GAME: WAIT_INPUT;
 		  else
 		      next_state = WAIT_INPUT;
 		end
             end
             
             // if move was valid, change to UPDATE_GAME, otherwise stay
-            CHECK_INPUT: next_state = write_to_board ? UPDATE_GAME: WAIT_INPUT;
+            // CHECK_INPUT: next_state = write_to_board ? UPDATE_GAME: WAIT_INPUT;
             
             // change to the CHECK_WINNER state
             UPDATE_GAME: next_state = CHECK_WINNER;
@@ -96,7 +97,7 @@ module myfsm(
     end
     
     // datapath signals
-    always @(*) begin
+    always @(posedge clk, negedge play) begin
         // by default make signals zero
         // might have to change these to non-blocking assignments?
         logic_go <= 1'b0;
@@ -105,28 +106,29 @@ module myfsm(
         // decoder_go <= 1'b0; removed enable for decoder
         onoff_write <= 1'b0;
         player_write <= 1'b0;
-        mem_address <= 3'd0;
+        mem_address <= decoder_addr;
         
         case (current_state)
             // set memory address to be address from decoder
             // enable move validator
-            CHECK_INPUT: begin
+            /* CHECK_INPUT: begin
                 mem_address <= decoder_addr;
                 // validator_go <= 1'b1;
 		next_turn <= 1'b0; // don't return to WAIT_INPUT until play button released
-                /* validator will take current player, and 1 column from
-                each of the onoff and player boards */
-            end
+                // validator will take current player, and 1 column from
+                // each of the onoff and player boards
+            end */
             
             // change player, enable writing to game boards
             UPDATE_GAME: begin
                 // enable write for memory, set address
-                mem_address <= decoder_addr;
+                // mem_address <= decoder_addr;
                 write_to_onoff <= validator_write_onoff;
                 write_to_player <= validator_write_player;
                 onoff_write <= 1'b1;
                 player_write <= 1'b1;
                 logic_go <= 1'b1; // also write to logic unit
+                next_turn <= 1'b0;
                 // is this enough to update memory?
                 // can we update cur_player here without messing something up?
                 // TO-DO: check in Modelsim
