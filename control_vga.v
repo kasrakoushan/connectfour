@@ -7,6 +7,7 @@ module control(
 	
 	output reg [3:0] pixel_count,
     output done;
+	output plot;
     );
 	
 	assign really_go = go;
@@ -54,13 +55,16 @@ module control(
             DRAWING_PLAYER: begin
 				if (pixel_count == 4'd15)
 					done = 1'b1;
-					pixel_count = 0;
+					pixel_count = 1'b0;
+					plot = 1'b1
 				else
 					pixel_count = pixel_count + 1'b1;
                 end
             DRAWING_POINTER: begin
+				plot = 1'b0
                 end
             DONE: begin
+				plot = 1'b0
                 end          
 
         // default:    // don't need default since we already made sure all of our outputs were assigned a value at the start of the always block
