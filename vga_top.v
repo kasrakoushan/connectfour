@@ -38,11 +38,11 @@ module vga_top(
 
 control control1(clk, resetn, go, pixel_count, done, plot);
 datapath datapath1(clk, resetn, pixel_count, decoded_height, location, go, new_x, new_y, colour);
-vga_adapter actual_vga1(
+/*vga_adapter actual_vga1(
 resetn, clk, new_x,new_y, plot,VGA_R, VGA_G, 
 VGA_B, VGA_HS, VGA_VS, VGA_BLANK, 
 VGA_SYNC, VGA_CLK);
-		 /*defparam VGA.RESOLUTION = "160x120";
+		 defparam VGA.RESOLUTION = "160x120";
 		defparam VGA.MONOCHROME = "FALSE";
 		defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
 		defparam VGA.BACKGROUND_IMAGE = "black.mif"; */
@@ -52,7 +52,7 @@ VGA_SYNC, VGA_CLK);
 
 endmodule
 
-module control(
+module control_vga_sim(
     input clk,
     input resetn,
     input go,
@@ -67,13 +67,14 @@ module control(
 	wire really_go;
 	reg p_state;
 	
-	assign really_go = ~go;
+	assign really_go = go;
 
     reg [5:0] current_state, next_state; 
     
     localparam  DRAWING_POINTER     = 5'd0,
                 DRAWING_PLAYER   	= 5'd1,
-				DONE				= 5'd2;
+				DONE				= 5'd2,
+				STILL_DRAWING 		= 5'd3;
 
     
     // Next state logic aka our state table
@@ -82,7 +83,8 @@ module control(
     begin: state_table 
             case (current_state)
                 DRAWING_POINTER: next_state = (done) ? DONE : DRAWING_POINTER; // Loop in current state until value is input
-                DRAWING_PLAYER: next_state = (done) ? DONE :  DRAWING_PLAYER; // Loop in current state until go signal goes low
+                DRAWING_PLAYER: next_state = (done) ? DONE :  STILL_DRAWING; // Loop in current state until go signal goes low
+				STILL_DRAWING: next_state = (done) ? DONE : DRAWING_PLAYER;
 				DONE: begin
 						if (p_state && ~done)
 							next_state = DRAWING_PLAYER;
@@ -98,31 +100,30 @@ module control(
 
     // Output logic aka all of our datapath control signals
     always @(*)
-    begin: enable_signals
-        // By default make all our signals 0
-        /*ld_alu_out = 1'b0;
-        ld_a = 1'b0;
-        ld_b = 1'b0;
-        ld_c = 1'b0;
-        ld_x = 1'b0;
-        ld_r = 1'b0;
-        alu_select_a = 2'b0;
-        alu_select_b = 2'b0;
-        alu_op       = 1'b0; */
+    begin: enable_signals	
 
         case (current_state)
             DRAWING_PLAYER: begin
 				if (pixel_count == 4'd15) begin
 					done = 1'b1;
 					pixel_count = 1'b0;
-					plot = 1'b1; end
-				else
+					plot = 1'b0; end
+				else 
+					plot = 1'b1;
 					pixel_count = pixel_count + 1'b1;
+					
                 end
             DRAWING_POINTER: begin
 				plot = 1'b0;
                 end
             DONE: begin
+				plot = 1'b1;
+				pixel_count = 1'b0;
+				end
+			STILL_DRAWING: begin
+				if (pixel_count == 4'd15) begin
+					done = 1'b1;
+					pixel_count = 1'b0; end
 				plot = 1'b0;
                 end          
 
@@ -133,16 +134,20 @@ module control(
     // current_state registers
     always@(posedge clk)
     begin: state_FFs
-        if(!resetn)
+        if(resetn)
             current_state <= DONE;
         else
             current_state <= next_state;
     end // state_FFS
-	/*always@(posedge really_go)
+	
+	always@(posedge really_go)
     begin: point_or_player
 		p_state =really_go;
-        done = 0;
-    end // state_FFS */
+		done = 1'b0;
+		pixel_count = 1'b0;
+		plot = 1'b1; 
+	end
+        
 endmodule
 
 module datapath(
