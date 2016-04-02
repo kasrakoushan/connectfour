@@ -2,7 +2,7 @@
 Some notes:
 - will need to make sure memory reset works properly
 */
-
+`include "find_vga_row.v"
 module myfsm(
     input clk,
     input play, // REMEMBER TO COMPLEMENT (this is a KEY)
@@ -24,10 +24,17 @@ module myfsm(
     output reg [2:0] mem_address, // memory address to write to
     // these write values also go to logic unit:
     output reg [5:0] write_to_onoff, // value to write to on off board
-    output reg [5:0] write_to_player); // value to write to player board
+    output reg [5:0] write_to_player, // value to write to player board
+    output reg vga_go, // go signal for VGA - 0 or 1
+    output [2:0] vga_row, // row value for VGA - top row is 0, bottom row is 5
+    output [2:0] vga_column, // column value for VGA - left column is 0, right column is 6
+    );
     
     reg [2:0] current_state, next_state;
     reg next_turn; // this will block until the play button is released
+    
+    row_decoder find_vga_row(validator_write_onoff, vga_row);
+    assign vga_column = decoder_addr; // the column is just the decoder output
     
     
     integer index; // initialize index for memory reset loop
@@ -107,6 +114,7 @@ module myfsm(
         onoff_write <= 1'b0;
         player_write <= 1'b0;
         mem_address <= decoder_addr;
+	vga_go <= 1'b0;
         
         case (current_state)
             // set memory address to be address from decoder
@@ -129,6 +137,8 @@ module myfsm(
                 player_write <= 1'b1;
                 logic_go <= 1'b1; // also write to logic unit
                 next_turn <= 1'b0;
+		vga_go <= 1'b1;
+		
                 // is this enough to update memory?
                 // can we update cur_player here without messing something up?
                 // TO-DO: check in Modelsim
@@ -172,6 +182,7 @@ module myfsm(
     always@(posedge clk) begin
         if(!reset)
             current_state <= END_GAME_STATE;
+	    game_finished <= 1'b0; // game is set back to being not over
         else
             current_state <= next_state;
     end
