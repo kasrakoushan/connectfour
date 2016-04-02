@@ -1,6 +1,6 @@
 module vga_top(
-	input [2:0] KEY, //will serve as clock for now, go, resetn
-	input [1:0] SW, //so far just to specify player
+	input [2:0] KEY0, //will serve as clock for now, resetn
+	input [9:0] SW, //so far just to specify player, go
 	
 	output [9:0] VGA_R,
 	output [9:0] VGA_G,
@@ -9,31 +9,43 @@ module vga_top(
 	output VGA_VS,
 	output VGA_BLANK,
 	output VGA_SYNC,
-	output VGA_CLK,
+	output VGA_CLK
 	
-	wire clock = KEY[0],
-	wire resetn = KEY[1]
-	wire player = SW[0],
-	wire go = SW[1],
-	wire [3:0] pixel_count,
-	wire done, plot, 
-	wire [7:0] new_x, new_y
 	
-	wire [2:0], decoded_height, location
 	
 	);
+	
+	wire clk;
+	wire resetn;
+	wire player;
+	wire go;
+	wire [3:0] pixel_count;
+	wire done, plot; 
+	wire [7:0] new_x, new_y;
+	
+	wire [2:0] decoded_height, location;
+	
+	assign clk = KEY0[0];
+	assign resetn = KEY0[1];
+	assign player = SW[0];
+	assign go = SW[1];
+	
 	
 	assign decoded_height = 2'd3;
 	assign location = 2'd3;	
 
-);
 
-controller control(clk, resetn, go, pixel_count, done plot);
-datapather datapath_vga(clk, resetn, pixel_count, decoded_height, location, go, new_x, new_y, colour);
-actual_vga vga_adapter(
-resetn, clock, new_x,new_y, plot,VGA_R, VGA_G, 
+
+control control1(clk, resetn, go, pixel_count, done, plot);
+datapath datapath1(clk, resetn, pixel_count, decoded_height, location, go, new_x, new_y, colour);
+vga_adapter actual_vga1(
+resetn, clk, new_x,new_y, plot,VGA_R, VGA_G, 
 VGA_B, VGA_HS, VGA_VS, VGA_BLANK, 
 VGA_SYNC, VGA_CLK);
+		 /*defparam VGA.RESOLUTION = "160x120";
+		defparam VGA.MONOCHROME = "FALSE";
+		defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
+		defparam VGA.BACKGROUND_IMAGE = "black.mif"; */
 
 
 
@@ -45,14 +57,17 @@ module control(
     input resetn,
     input go,
 	
-	wire really_go;
+	
 	
 	output reg [3:0] pixel_count,
-    output done;
-	output plot;
+    output reg done,
+	output reg plot
     );
 	
-	assign really_go = go;
+	wire really_go;
+	reg p_state;
+	
+	assign really_go = ~go;
 
     reg [5:0] current_state, next_state; 
     
@@ -62,18 +77,20 @@ module control(
 
     
     // Next state logic aka our state table
+	initial begin p_state = 1'b1; end
     always@(*)
     begin: state_table 
             case (current_state)
                 DRAWING_POINTER: next_state = (done) ? DONE : DRAWING_POINTER; // Loop in current state until value is input
                 DRAWING_PLAYER: next_state = (done) ? DONE :  DRAWING_PLAYER; // Loop in current state until go signal goes low
-				DONE: next_state = (go and ~done) ? DRAWING_PLAYER: DONE;
-						if (go and ~done)
+				DONE: begin
+						if (p_state && ~done)
 							next_state = DRAWING_PLAYER;
-						else if (~go and ~done)
+						else if (~p_state && ~done)
 							next_state = DRAWING_POINTER;
 						else
 							next_state = DONE;
+					end
 			default:     next_state = DONE;
         endcase
     end // state_table
@@ -95,18 +112,18 @@ module control(
 
         case (current_state)
             DRAWING_PLAYER: begin
-				if (pixel_count == 4'd15)
+				if (pixel_count == 4'd15) begin
 					done = 1'b1;
 					pixel_count = 1'b0;
-					plot = 1'b1
+					plot = 1'b1; end
 				else
 					pixel_count = pixel_count + 1'b1;
                 end
             DRAWING_POINTER: begin
-				plot = 1'b0
+				plot = 1'b0;
                 end
             DONE: begin
-				plot = 1'b0
+				plot = 1'b0;
                 end          
 
         // default:    // don't need default since we already made sure all of our outputs were assigned a value at the start of the always block
@@ -121,25 +138,26 @@ module control(
         else
             current_state <= next_state;
     end // state_FFS
-	always@(posedge go, negedge go)
+	/*always@(posedge really_go)
     begin: point_or_player
+		p_state =really_go;
         done = 0;
-    end // state_FFS
+    end // state_FFS */
 endmodule
 
 module datapath(
-    clk, resetn, pixel_count, decoded_height, location, go, new_x, new_y, colour
+    clk, resetn, pixel_count, decoded_height, location, go, player, new_x, new_y, colour
     );
     
-	input clk,
-    input resetn,
-    input [3:0] pixel_count, //determines x and y shifts
-    input [2:0] decoded_height, //a sequence of ones decoded to be 0-5 height value
-    input [2:0] location, //a 0-6 number representing column value
-    input go, //the actual load key from the player
-	input player, //just the player's 0 or 1 value
-    output reg [8:0] new_x, new_y //big, actual locations for the vga to get and plot
-    output [2:0] colour,
+	input clk;
+    input resetn;
+    input [3:0] pixel_count; //determines x and y shifts
+    input [2:0] decoded_height; //a sequence of ones decoded to be 0-5 height value
+    input [2:0] location; //a 0-6 number representing column value
+    input go; //the actual load key from the player
+	input player; //just the player's 0 or 1 value
+    output reg [8:0] new_x, new_y; //big, actual locations for the vga to get and plot
+    output [2:0] colour;
 	localparam  grid_length     = 5'd2,
                 block_length   	= 5'd4;
 				
