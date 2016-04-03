@@ -1,4 +1,5 @@
-module control_vga_sim(
+//IMPORTANT MAKE SURE PIXELCOUNT == 4'D15 NOT 4'1D5
+module control_vga(
     input clk,
     input resetn,
     input go,
@@ -50,14 +51,14 @@ module control_vga_sim(
 
         case (current_state)
             DRAWING_PLAYER: begin
-				if (pixel_count == 4'd15) begin
+				if (pixel_count == 4'd5|| pixel_count > 4'd5) begin
 					done = 1'b1;
 					pixel_count = 1'b0;
 					plot = 1'b0; end
-				else 
+				else begin
 					plot = 1'b1;
 					pixel_count = pixel_count + 1'b1;
-					
+					end
                 end
             DRAWING_POINTER: begin
 				plot = 1'b0;
@@ -67,7 +68,7 @@ module control_vga_sim(
 				pixel_count = 1'b0;
 				end
 			STILL_DRAWING: begin
-				if (pixel_count == 4'd15) begin
+				if (pixel_count == 4'd15|| pixel_count > 4'd15) begin
 					done = 1'b1;
 					pixel_count = 1'b0; end
 				plot = 1'b0;

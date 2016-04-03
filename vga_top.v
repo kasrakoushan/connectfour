@@ -1,4 +1,5 @@
 module vga_top(
+//IMPORTANT IMPORTANT IMPORTANT: CHANGE PIXELCOUNT == TO 4'D15 BEFORE RUNNING FOR REAL
 	input [2:0] KEY0, //will serve as clock for now, resetn
 	input [9:0] SW, //so far just to specify player, go
 	
@@ -18,10 +19,11 @@ module vga_top(
 	wire clk;
 	wire resetn;
 	wire player;
+	wire [2:0] colour; 
 	wire go;
 	wire [3:0] pixel_count;
 	wire done, plot; 
-	wire [7:0] new_x, new_y;
+	wire [9:0] new_x, new_y;
 	
 	wire [2:0] decoded_height, location;
 	
@@ -31,13 +33,13 @@ module vga_top(
 	assign go = SW[1];
 	
 	
-	assign decoded_height = 2'd3;
-	assign location = 2'd3;	
+	assign decoded_height = 1'd0;
+	assign location = 1'd0;	
 
 
 
-control control1(clk, resetn, go, pixel_count, done, plot);
-datapath datapath1(clk, resetn, pixel_count, decoded_height, location, go, new_x, new_y, colour);
+control_vga control1(clk, resetn, go, pixel_count, done, plot);
+datapath_vga datapath1(clk, pixel_count, decoded_height, location, go, player, new_x, new_y, colour);
 /*vga_adapter actual_vga1(
 resetn, clk, new_x,new_y, plot,VGA_R, VGA_G, 
 VGA_B, VGA_HS, VGA_VS, VGA_BLANK, 
@@ -104,14 +106,14 @@ module control_vga_sim(
 
         case (current_state)
             DRAWING_PLAYER: begin
-				if (pixel_count == 4'd15) begin
+				if (pixel_count == 4'd15 || pixel_count > 4'd15) begin
 					done = 1'b1;
 					pixel_count = 1'b0;
 					plot = 1'b0; end
-				else 
+				else  begin
 					plot = 1'b1;
 					pixel_count = pixel_count + 1'b1;
-					
+					end
                 end
             DRAWING_POINTER: begin
 				plot = 1'b0;
@@ -120,8 +122,8 @@ module control_vga_sim(
 				plot = 1'b1;
 				pixel_count = 1'b0;
 				end
-			STILL_DRAWING: begin
-				if (pixel_count == 4'd15) begin
+			STILL_DRAWING: begin 
+				if (pixel_count == 4'd15 || pixel_count > 4'd15) begin
 					done = 1'b1;
 					pixel_count = 1'b0; end
 				plot = 1'b0;
@@ -150,18 +152,17 @@ module control_vga_sim(
         
 endmodule
 
-module datapath(
-    clk, resetn, pixel_count, decoded_height, location, go, player, new_x, new_y, colour
+module datapath_vga(
+    clk, pixel_count, decoded_height, location, go, player, new_x, new_y, colour
     );
     
 	input clk;
-    input resetn;
     input [3:0] pixel_count; //determines x and y shifts
     input [2:0] decoded_height; //a sequence of ones decoded to be 0-5 height value
     input [2:0] location; //a 0-6 number representing column value
     input go; //the actual load key from the player
 	input player; //just the player's 0 or 1 value
-    output reg [8:0] new_x, new_y; //big, actual locations for the vga to get and plot
+    output reg [9:0] new_x, new_y; //big, actual locations for the vga to get and plot
     output [2:0] colour;
 	localparam  grid_length     = 5'd2,
                 block_length   	= 5'd4;
@@ -173,7 +174,7 @@ module datapath(
     // Registers a, b, c, x with respective input logic
     always@(posedge clk) begin
         if(~go) begin
-            new_y = pixel_count[3:2] + 7'd128;
+            new_y = pixel_count[3:2] + 1'b1;
 			new_x = pixel_count[1:0] + (location + 1'b1) * grid_length + location * block_length;
         end
         else begin
