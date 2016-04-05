@@ -17,17 +17,18 @@ module myfsm(
     output reg game_finished, // whether game is finished (useful for VGA)
     output reg logic_go, // command to game logic unit
     output reg logic_reset, // command to tell logic to reset (active high)
-    output reg onoff_write, // write instruction to memory
-    output reg player_write, // write instruction to memory
     output reg [2:0] mem_address, // memory address to write to
-    // these write values also go to logic unit:
-    output reg [5:0] write_to_onoff, // value to write to on off board
-    output reg [5:0] write_to_player, // value to write to player board
-    output reg vga_go // go signal for VGA - 0 or 1
+    output reg [5:0] write_to_onoff, // value to write to logic unit
+    output reg [5:0] write_to_player, // value to write to logic unit
+    output reg vga_go, // go signal for VGA - 0 or 1
+    output reg [5:0] onoff_to_validator, // output to validator
+    output reg [5:0] player_to_validator // output to validator
     );
     
     reg [2:0] current_state, next_state;
     reg next_turn; // this will block until the play button is released
+    reg [41:0] onoff_board;
+    reg [41:0] player_board;
     
     
     integer index; // initialize index for memory reset loop
@@ -91,21 +92,78 @@ module myfsm(
         // by default make signals zero
         logic_go <= 1'b0;
         logic_reset <= 1'b0;
-        onoff_write <= 1'b0;
-        player_write <= 1'b0;
         mem_address <= decoder_addr;
 	vga_go <= 1'b0;
+	// modify outputs to validator
+	case (decoder_addr)
+		    3'd0: begin
+			onoff_to_validator <= onoff_board[5:0];
+			player_to_validator <= player_board[5:0];
+		    end
+		    3'd1: begin
+			onoff_to_validator <= onoff_board[11:6];
+			player_to_validator <= player_board[11:6];
+		    end
+		    3'd2: begin
+			onoff_to_validator <= onoff_board[17:12];
+			player_to_validator <= player_board[17:12];
+		    end
+		    3'd3: begin
+			onoff_to_validator <= onoff_board[23:18];
+			player_to_validator <= player_board[23:18];
+		    end
+		    3'd4: begin
+			onoff_to_validator <= onoff_board[29:24];
+			player_to_validator <= player_board[29:24];
+		    end
+		    3'd5: begin
+			onoff_to_validator <= onoff_board[35:30];
+			player_to_validator <= player_board[35:30];
+		    end
+		    3'd6: begin
+			onoff_to_validator <= onoff_board[41:36];
+			player_to_validator <= player_board[41:36];
+		    end
+		endcase
         
         case (current_state)
             // change player, enable writing to game boards
             UPDATE_GAME: begin
-                // enable write for memory, set address
+                // update register with value from validator
+		case (mem_address)
+		    3'd0: begin
+			onoff_board[5:0] <= validator_write_onoff;
+			player_board[5:0] <= validator_write_player;
+		    end
+		    3'd1: begin
+			onoff_board[11:6] <= validator_write_onoff;
+			player_board[11:6] <= validator_write_player;
+		    end
+		    3'd2: begin
+			onoff_board[17:12] <= validator_write_onoff;
+			player_board[17:12] <= validator_write_player;
+		    end
+		    3'd3: begin
+			onoff_board[23:18] <= validator_write_onoff;
+			player_board[23:18] <= validator_write_player;
+		    end
+		    3'd4: begin
+			onoff_board[29:24] <= validator_write_onoff;
+			player_board[29:24] <= validator_write_player;
+		    end
+		    3'd5: begin
+			onoff_board[35:30] <= validator_write_onoff;
+			player_board[35:30] <= validator_write_player;
+		    end
+		    3'd6: begin
+			onoff_board[41:36] <= validator_write_onoff;
+			player_board[41:36] <= validator_write_player;
+		    end
+		endcase
                 write_to_onoff <= validator_write_onoff;
                 write_to_player <= validator_write_player;
-                onoff_write <= 1'b1;
-                player_write <= 1'b1;
-                logic_go <= 1'b1; // also write to logic unit
-                next_turn <= 1'b0;
+		logic_go <= 1'b1; // also write to logic unit
+		next_turn <= 1'b0;
 		vga_go <= 1'b1;
             end
             
@@ -120,17 +178,10 @@ module myfsm(
                 cur_player <= 1'b0;
                 game_finished <= 1'b1;
                 logic_reset <= 1'b1;
-                if (play)
-                    onoff_write <= 1'b1;
-                    player_write <= 1'b1;
-                    write_to_onoff <= 6'd0;
-                    write_to_player <= 6'd0;
-                    for (index = 0; index < 7; index = index + 1)
-                        begin
-                            mem_address <= index;
-                            // should this be enough to fill board with 0s?
-                            // checked in Modelsim, still not sure if it will update the memory
-                        end
+                if (play) begin
+		    onoff_board <= 42'd0;
+		    player_board <= 42'd0;
+		end
             end
             
             // should not need a default

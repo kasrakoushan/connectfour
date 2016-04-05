@@ -79,30 +79,13 @@ module gamewithVGA(
         .cur_player(cur_player), 
         .game_finished(gameover), 
         .logic_go(logic_go), 
-        .logic_reset(logic_reset),
-        .onoff_write(mem_write_onoff), 
-        .player_write(mem_write_player), 
+        .logic_reset(logic_reset), 
         .mem_address(mem_address), 
         .write_to_onoff(write_to_onoff), 
         .write_to_player(write_to_player),
-        .vga_go(go)
-        );
-    
-    // instantiate memory
-    gameboard onoff_board(
-        .address(mem_address), 
-        .clock(clk), 
-        .data(write_to_onoff),
-        .wren(mem_write_onoff), 
-        .q(onoff_data_out)
-        );
-    
-    gameboard player_board(
-        .address(mem_address), 
-        .clock(clk), 
-        .data(write_to_player),
-        .wren(mem_write_player), 
-        .q(player_data_out)
+        .vga_go(go),
+        .onoff_to_validator(onoff_data_out),
+        .player_to_validator(player_data_out)
         );
         
 endmodule
