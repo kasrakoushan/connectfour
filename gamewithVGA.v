@@ -18,7 +18,7 @@ module gamewithVGA(
     
     output [2:0] row,
     output [2:0] column,
-    output reg cur_player,
+    output cur_player,
     output gameover,
     output go); // just an output for game result
     
