@@ -1,6 +1,6 @@
 module find_vga_row(
     input [5:0] onoff_val, 
-    output [2:0] vga_row);
+    output reg [2:0] vga_row);
     
     /* set vga_row to be the value of the row to put in the most
     recent piece 
