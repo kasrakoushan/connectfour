@@ -4,3 +4,4 @@ outputs to VGA
 cur_player (0 or 1)
 game_over (0 or 1)
 go (0 or 1)
+reset (0 or 1) - active low
