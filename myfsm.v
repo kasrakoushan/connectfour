@@ -49,6 +49,8 @@ module myfsm(
         game_finished = 1'b0; // game is not over
         current_state = WAIT_INPUT; // set initial state
         next_turn = 1'b1; // move forward initially
+	onoff_board = 42'd0; // initialize board to zero
+	player_board = 42'd0; // initialize board to zero
     end
                 
     // state table
