@@ -112,3 +112,9 @@ run 10ns
 force {play} 1
 run 10ns
 # Should be player 1
+
+# Now press reset
+force {reset} 0
+run 10ns
+force {reset} 1
+run 10ns
