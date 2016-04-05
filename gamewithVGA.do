@@ -48,3 +48,9 @@ force {play} 0
 run 10ns
 force {play} 1
 run 10ns
+
+# Now try reset
+force {game_reset} 0
+run 10ns
+force {game_reset} 1
+run 10ns
