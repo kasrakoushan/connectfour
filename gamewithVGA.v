@@ -29,7 +29,6 @@ module gamewithVGA(
     wire logic_reset, logic_result;
     wire [5:0] write_to_onoff, write_to_player;
     wire [5:0] validator_write_onoff, validator_write_player;
-    wire mem_write_onoff, mem_write_player;
     
     // set up VGA row and column outputs
     // top row is 0, bottom row is 5
