@@ -6,6 +6,8 @@
 // `include "/data/quartus/quartus/eda/sim_lib/altera_mf.v"
 // check if the fact that mylog.v is included twice is an issue
 // not really, is just over-written
+// this code no longer works with myfsm (because myfsm has been updated
+// to include outputs to VGA)
 
 module gamenoVGA(
     input clk,
@@ -23,8 +25,6 @@ module gamenoVGA(
     wire [5:0] write_to_onoff, write_to_player;
     wire [5:0] validator_write_onoff, validator_write_player;
     wire mem_write_onoff, mem_write_player;
-    
-    // TO-DO: re-write this in the .( ) notation
     
     // instantiate switch decoder
     switchdecoder swi_dec(

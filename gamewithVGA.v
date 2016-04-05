@@ -3,10 +3,12 @@
 `include "myfsm.v"
 `include "switchdecoder.v"
 `include "gameboard.v"
+`include "find_vga_row.v"
 // `include "vga_top.v"
 // `include "/data/quartus/quartus/eda/sim_lib/altera_mf.v"
-// check if the fact that mylog.v is included twice is an issue
-// not really, is just over-written
+
+/* module that takes switch/clock inputs and outputs the proper
+ values to the top-level VGA module */
 
 module gamewithVGA(
     input clk,
@@ -29,7 +31,11 @@ module gamewithVGA(
     wire [5:0] validator_write_onoff, validator_write_player;
     wire mem_write_onoff, mem_write_player;
     
-    // TO-DO: re-write this in the .( ) notation
+    // set up VGA row and column outputs
+    // top row is 0, bottom row is 5
+    // left column is 0, right column is 6
+    assign column = decoder_address;
+    row_decoder find_vga_row(validator_write_onoff, row);
     
     // instantiate switch decoder
     switchdecoder swi_dec(
@@ -78,10 +84,8 @@ module gamewithVGA(
         .player_write(mem_write_player), 
         .mem_address(mem_address), 
         .write_to_onoff(write_to_onoff), 
-        .write_to_player(write_to_player)
-        .vga_go(go),
-        .vga_row(row),
-        .vga_column(column)
+        .write_to_player(write_to_player),
+        .vga_go(go)
         );
     
     // instantiate memory
@@ -101,6 +105,4 @@ module gamewithVGA(
         .q(player_data_out)
         );
         
-    // now just sit back and LOL
-    
 endmodule
