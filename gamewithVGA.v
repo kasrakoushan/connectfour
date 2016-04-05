@@ -20,7 +20,10 @@ module gamewithVGA(
     output [2:0] column,
     output cur_player,
     output gameover,
-    output go); // just an output for game result
+    output go,
+    output reset);
+    
+    assign reset = game_reset; // reset for VGA
     
     wire [2:0] decoder_address, mem_address;
     wire valid_input, valid_move;
