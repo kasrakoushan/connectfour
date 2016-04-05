@@ -35,7 +35,7 @@ module gamewithVGA(
     // top row is 0, bottom row is 5
     // left column is 0, right column is 6
     assign column = decoder_address;
-    row_decoder find_vga_row(validator_write_onoff, row);
+    find_vga_row row_decoder(validator_write_onoff, row);
     
     // instantiate switch decoder
     switchdecoder swi_dec(
