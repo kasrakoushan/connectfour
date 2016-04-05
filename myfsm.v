@@ -30,9 +30,6 @@ module myfsm(
     reg [41:0] onoff_board;
     reg [41:0] player_board;
     
-    
-    integer index; // initialize index for memory reset loop
-    
     localparam  WAIT_INPUT          = 3'd0, // wait for input
                 UPDATE_GAME         = 3'd1, // update the game state
                 CHECK_WINNER        = 3'd2, // check for a winner
