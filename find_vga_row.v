@@ -7,7 +7,7 @@ module find_vga_row(
     top row is 0
     bottom row is 5 */
     always @(*) begin
-        case (num)
+        case (onoff_val)
             6'b000001: vga_row = 3'd0;
             6'b000011: vga_row = 3'd1;
             6'b000111: vga_row = 3'd2;
