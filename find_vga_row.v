@@ -8,12 +8,12 @@ module find_vga_row(
     bottom row is 5 */
     always @(*) begin
         case (onoff_val)
-            6'b000001: vga_row = 3'd0;
-            6'b000011: vga_row = 3'd1;
-            6'b000111: vga_row = 3'd2;
-            6'b001111: vga_row = 3'd3;
-            6'b011111: vga_row = 3'd4;
-            6'b111111: vga_row = 3'd5;
+            6'b000001: vga_row = 3'd5;
+            6'b000011: vga_row = 3'd4;
+            6'b000111: vga_row = 3'd3;
+            6'b001111: vga_row = 3'd2;
+            6'b011111: vga_row = 3'd1;
+            6'b111111: vga_row = 3'd0;
             default: vga_row = 3'd0;
         endcase
     end
