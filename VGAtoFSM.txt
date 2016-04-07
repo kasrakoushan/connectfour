@@ -1,7 +1,0 @@
-outputs to VGA
-[2:0] row (between 0 and 5)
-[2:0] column (between 0 and 6)
-cur_player (0 or 1)
-game_over (0 or 1)
-go (0 or 1)
-reset (0 or 1) - active low
