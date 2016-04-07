@@ -1,0 +1,48 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dc:/Users/user/Documents/CSC258/connectfour/win_logic_modules
+vregister_decoder_win
+!s110 1460063628
+!i10b 1
+!s100 6jnd=T9Z6MTzo`SSibLmO2
+Inf]KCh5lH1Kh:@[eh]2DV2
+Z1 VDg1SIo80bB@j0V0VzS_@n1
+R0
+w1460062842
+8register_decoder_win.v
+Fregister_decoder_win.v
+L0 1
+Z2 OV;L;10.4b;61
+r1
+!s85 0
+31
+!s108 1460063628.000000
+!s107 register_decoder_win.v|
+!s90 -reportprogress|300|register_decoder_win.v|
+!i113 1
+vvertical_win
+!s110 1460053379
+!i10b 1
+!s100 WTVDgJfSeYLSJKfMHmo^e3
+Ib4dCFRE6]dMS;UF3lRzM>2
+R1
+R0
+w1460053220
+8vertical_win.v
+Fvertical_win.v
+L0 1
+R2
+r1
+!s85 0
+31
+!s108 1460053379.000000
+!s107 vertical_win.v|
+!s90 -reportprogress|300|vertical_win.v|
+!i113 1
