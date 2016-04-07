@@ -26,6 +26,7 @@ run 10ns
 force {KEY0[0]} 1
 run 10ns
 force {KEY0[0]} 0
+force {KEY0[1]} 1 
 force {SW[1]} 1 
 #go
 run 10ns
@@ -33,6 +34,7 @@ run 10ns
 force {KEY0[0]} 1
 run 10ns
 force {KEY0[0]} 0
+force {KEY0[1]} 0 
 run 10ns
 
 #X IS 2

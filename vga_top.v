@@ -3,6 +3,7 @@ module vga_top(
 	input [2:0] KEY0, //will serve as clock for now, resetn
 	input [9:0] SW, //so far just to specify player, go
 	
+	
 	output [9:0] VGA_R,
 	output [9:0] VGA_G,
 	output [9:0] VGA_B,
@@ -30,13 +31,10 @@ module vga_top(
 	assign clk = KEY0[0];
 	assign resetn = KEY0[1];
 	assign player = SW[0];
-	assign go = SW[1];
+	assign go = SW[1]; 
 	
-	
-	assign decoded_height = 1'd0;
-	assign location = 1'd0;	
-
-
+	assign decoded_height = 1'b1;
+	assign location = 1'b1;
 
 control_vga control1(clk, resetn, go, pixel_count, done, plot);
 datapath_vga datapath1(clk, pixel_count, decoded_height, location, go, player, new_x, new_y, colour);
@@ -54,7 +52,7 @@ VGA_SYNC, VGA_CLK);
 
 endmodule
 
-module control_vga_sim(
+module control_vga(
     input clk,
     input resetn,
     input go,
@@ -106,7 +104,7 @@ module control_vga_sim(
 
         case (current_state)
             DRAWING_PLAYER: begin
-				if (pixel_count == 4'd15 || pixel_count > 4'd15) begin
+				if (pixel_count == 4'd5 || pixel_count > 4'd5) begin
 					done = 1'b1;
 					pixel_count = 1'b0;
 					plot = 1'b0; end
@@ -121,9 +119,10 @@ module control_vga_sim(
             DONE: begin
 				plot = 1'b1;
 				pixel_count = 1'b0;
+				done = 1'b0;
 				end
 			STILL_DRAWING: begin 
-				if (pixel_count == 4'd15 || pixel_count > 4'd15) begin
+				if (pixel_count == 4'd5 || pixel_count > 4'd5) begin
 					done = 1'b1;
 					pixel_count = 1'b0; end
 				plot = 1'b0;
@@ -133,8 +132,8 @@ module control_vga_sim(
         endcase
     end // enable_signals
    
-    // current_state registers
-    always@(posedge clk)
+    // POSSIBLE SOLUTION 1: do updating here? i think it doesn't like different places updating pixelcount etc
+    always@(posedge clk) //, posedge really_go) 
     begin: state_FFs
         if(resetn)
             current_state <= DONE;
@@ -142,13 +141,14 @@ module control_vga_sim(
             current_state <= next_state;
     end // state_FFS
 	
+	/* 	POSSIBLE SOLUTION 2: <= maybe? this unsure what the error even means
 	always@(posedge really_go)
     begin: point_or_player
 		p_state =really_go;
 		done = 1'b0;
 		pixel_count = 1'b0;
 		plot = 1'b1; 
-	end
+	end */
         
 endmodule
 
