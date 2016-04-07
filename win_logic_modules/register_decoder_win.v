@@ -34,6 +34,7 @@ module register_decoder_win(player, location, height, player_register, onoff_reg
 	assign horizontal_register[1] = player_register[(3'd6 *(5)) + (height) ];
 	assign horizontal_register[0] = player_register[(3'd6 *(6)) + (height) ];
 	
+	//onoffboard assignments -HORIZONTALLY (MORE COMPLICATED)	
 	assign horizontal_register_o[6] = onoff_register[( height)];
 	assign horizontal_register_o[5] = onoff_register[(3'd6 *(1)) + (height) ];
 	assign horizontal_register_o[4] = onoff_register[(3'd6 *(2)) + (height) ];
@@ -43,12 +44,10 @@ module register_decoder_win(player, location, height, player_register, onoff_reg
 	assign horizontal_register_o[0] = onoff_register[(3'd6 *(6)) + (height) ];
 	
 	
-	//diagonal processes will return a triplet of all 1s iff the spot is occupied and has correct values
-	
 	
 	always @(*) begin
-	//TL assignment
-	if (location > 2'd2 && height < 2'd3) begin	
+	//TL assignment- TOP LEFT
+	if (location > 2'd2 && height < 2'd3) begin	//must be far enough from corner
 		if (onoff_register[3'd6*(location-1'd1) + height + 1'd1]) dia_TL[0] = 
 						player_register[3'd6*(location-1'd1) + height + 1'd1];
 					else dia_TL[0] = ~player ;
@@ -64,7 +63,8 @@ module register_decoder_win(player, location, height, player_register, onoff_reg
 		dia_TL[2]= ~player;
 		dia_TL[1]= ~player;
 		
-	if (location < 3'd5 && height < 2'd3) begin	
+	//TR assignment- TOP RIGHT	
+	if (location < 3'd5 && height < 2'd3) begin	//must be far enough from corner
 		if (onoff_register[3'd6*(location+1'd1) + height + 1'd1]) dia_TR[0] = 
 							player_register[3'd6*(location+1'd1) + height + 1'd1];
 					else dia_TR[0] = ~player ;
@@ -80,7 +80,8 @@ module register_decoder_win(player, location, height, player_register, onoff_reg
 		dia_TR[2]= ~player;
 		dia_TR[1]= ~player;
 		
-	if (location > 2'd2 && height > 2'd2) begin	
+	//BL assignment- BOTTOM LEFT	
+	if (location > 2'd2 && height > 2'd2) begin	//must be far enough from corner
 		if (onoff_register[3'd6*(location-1'd1) + height - 1'd1]) dia_BL[0] = 
 						player_register[3'd6*(location-1'd1) + height - 1'd1];
 					else dia_BL[0] = ~player;
@@ -95,8 +96,9 @@ module register_decoder_win(player, location, height, player_register, onoff_reg
 		dia_BL[0]= ~player;
 		dia_BL[2]= ~player;
 		dia_BL[1]= ~player;
-		
-	if (location > 3'd5 && height > 2'd2) begin	
+	
+	//BR assignment- BOTTOM RIGHT
+	if (location > 3'd5 && height > 2'd2) begin	//must be far enough from corner
 		if (onoff_register[3'd6*(location+1'd1) + height - 1'd1]) dia_BR[0] = 
 						player_register[3'd6*(location+1'd1) + height - 1'd1];
 					else dia_BR[1] = ~player;

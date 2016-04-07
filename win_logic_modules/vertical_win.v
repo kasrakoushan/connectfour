@@ -4,7 +4,7 @@ module vertical_win(player_register, onoff_register, player, early_win1, early_w
 	output reg early_win, wongame;
 	
 	always @(*) begin
-		if (player && ~early_win1) begin
+		if (player) begin
 			case(player_register)
 				6'b001111: begin wongame = 1'b1; early_win2 = 1'b1; end
 				6'b011110: begin wongame = 1'b1; early_win = 1'b1; end
@@ -13,7 +13,7 @@ module vertical_win(player_register, onoff_register, player, early_win1, early_w
 			endcase
 		end
 		else begin
-		case(player_register&& ~early_win1)
+		case(player_register)
 				6'b000000:  if (onoff_register == 6'b001111) begin wongame = 1'b1; early_win2 = 1'b1; end
 							else begin wongame = 1'b0; early_win = 1'b0;end
 				6'b000001:  if (onoff_register ==6'b011111) begin wongame = 1'b1; early_win2 = 1'b1; end

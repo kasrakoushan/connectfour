@@ -4,15 +4,15 @@ module diagonal_win(player, location, height, early_win,dia_TL, dia_TR, dia_BL, 
 	input early_win;
 	input [2:0] dia_TL, dia_TR, dia_BL, dia_BR;
 	
-	output won_game;
+	output reg won_game;
 	
-	assign won_game = 0;
+
 	
 	always @(*) begin
 	 if (early_win) won_game = 1'b1;
 	end
 		
-	always @(*) begin //if any diagonal value is 3
+	always @(*) begin //if any diagonal set is 3 or 0 then 3 + 1 or 0 + 0 imply a diagonal
 		if (player) begin
 			if (dia_TL > 2'd2 || dia_TR> 2'd3 || dia_BL> 2'd3 || dia_BR > 2'd3)
 				won_game = 1'b1;
@@ -23,9 +23,9 @@ module diagonal_win(player, location, height, early_win,dia_TL, dia_TR, dia_BL, 
 		end
 	end
 
-	always @(*) begin
+	always @(*) begin //checks case for 2 on one side, 1 on other
 	
-		if (player) begin
+		if (player) begin 
 			if (dia_TL[1:0] + dia_BR[0] == 2'd3 || dia_TR[1:0] + dia_BL[0] == 2'd3 || 
 				dia_TL[0] + dia_BR[1:0] == 2'd3 || dia_TR[0] + dia_BR[1:0] == 2'd3)	
 				won_game = 1'b1;
@@ -34,6 +34,22 @@ module diagonal_win(player, location, height, early_win,dia_TL, dia_TR, dia_BL, 
 		else begin
 			if (dia_TL[1:0] + dia_BR[0] == 0 || dia_TR[1:0] + dia_BL[0] == 0 || 
 				dia_TL[0] + dia_BR[1:0] == 0 || dia_TR[0] + dia_BR[1:0] == 0)	
+				won_game = 1'b1;
+		end
+	
+	end
+	
+		always @(*) begin //checks case for 2 on one side, 2 on other
+	
+		if (player) begin 
+			if (dia_TL[1:0] + dia_BR[1:0] == 3'd6 || dia_TR[1:0] + dia_BL[1:0] == 3'd6 || 
+				dia_TL[1:0] + dia_BR[1:0] == 3'd6 || dia_TR[1:0] + dia_BR[1:0] == 3'd6)	
+				won_game = 1'b1;
+			
+			end
+		else begin
+			if (dia_TL[1:0] + dia_BR[1:0] == 0 || dia_TR[1:0] + dia_BL[1:0] == 0 || 
+				dia_TL[1:0] + dia_BR[1:0] == 0 || dia_TR[1:0] + dia_BR[1:0] == 0)	
 				won_game = 1'b1;
 		end
 	
